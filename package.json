@@ -7,8 +7,10 @@
   "scripts": {
     "build": "tsc",
     "develop": "concurrently -p command  \"micro-dev\" \"tsc --watch\"",
-    "now-build": "yarn build",
     "start": "micro"
+  },
+  "husky": {
+    "prepush": "yarn build"
   },
   "dependencies": {
     "axios": "^0.18.0",
@@ -24,6 +26,7 @@
     "@types/lodash": "^4.14.118",
     "@types/node": "^10.12.10",
     "concurrently": "^4.1.0",
+    "husky": "^1.2.0",
     "micro-dev": "^3.0.0",
     "typescript": "^3.1.6"
   }

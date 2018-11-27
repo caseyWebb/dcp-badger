@@ -1,6 +1,6 @@
 {
   "version": 2,
   "builds": [
-     { "src": "./index.tsx", "use": "now-typescript" }
+     { "src": "./dist/index.js", "use": "@now/node" }
   ]
 }

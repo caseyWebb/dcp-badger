@@ -6,8 +6,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "micro",
-    "develop": "concurrently -p command  \"micro-dev\" \"tsc --watch\""
+    "develop": "concurrently -p command  \"micro-dev\" \"tsc --watch\"",
+    "now-build": "yarn build",
+    "start": "micro"
   },
   "dependencies": {
     "axios": "^0.18.0",

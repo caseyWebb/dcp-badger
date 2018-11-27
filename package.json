@@ -8,11 +8,13 @@
     "develop": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "fs-extra": "^7.0.1",
     "koa": "^2.6.2",
     "lodash": "^4.17.11"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/fs-extra": "^5.0.4",
     "@types/koa": "^2.0.47",
     "@types/lodash": "^4.14.118",

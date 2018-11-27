@@ -1,15 +1,23 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import _ from 'lodash'
+import { template as ejs } from 'lodash'
+import { filter, map, flow, uniq } from 'lodash/fp'
+import axios from 'axios'
 import Koa from 'koa'
 
 const host = 'localhost'
 const port = 3000
 
+const extensions = {
+  haskell: 'hs',
+  typescript: 'ts'
+}
+
 type Template = (data: TemplateData) => string
 
 type TemplateData = {}
-;(async function main() {
+
+async function main() {
   const app = new Koa()
   const template = await createTemplate()
 
@@ -20,11 +28,13 @@ type TemplateData = {}
   server.on('listening', () => console.log(`Server started on ${host}:${port}`))
 
   process.once('SIGUSR2', () => server.close())
-})()
+}
 
 function createRequestHandler(template: Template) {
   return async function requestHandler(ctx: Koa.Context) {
-    ctx.body = template({})
+    const data = await getTemplateData()
+    console.log(data)
+    ctx.body = template(data)
     ctx.status = 200
     ctx.type = 'image/svg+xml'
   }
@@ -35,5 +45,28 @@ async function createTemplate(): Promise<Template> {
     path.resolve(__dirname, './image.ejs'),
     'utf-8'
   )
-  return _.template(templateString)
+  return ejs(templateString)
 }
+
+async function getTemplateData() {
+  const owner = 'caseyWebb'
+  const repo = 'dcp'
+  const ref = 'master'
+  const language = 'haskell'
+  const ext = extensions[language]
+  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
+  const res = await axios.get(url)
+  const regex = new RegExp(
+    `(?<year>\\d+)/(?<month>\\d+)/(?<day>\\d+)\\.${ext}`,
+    'u'
+  )
+  const files = flow(
+    filter(({ type }: any) => type === 'blob'),
+    map(({ path }: any) => regex.exec(path)),
+    filter((f: RegExpExecArray) => f !== null),
+    map((f: RegExpExecArray) => f.groups)
+  )(res.data.tree)
+  return files
+}
+
+main()

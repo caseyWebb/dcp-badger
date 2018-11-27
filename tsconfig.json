@@ -4,6 +4,12 @@
     "module": "commonjs",
     "strict": true,
     "outDir": "dist",
-    "esModuleInterop": true
+    "jsx": "react",
+    "jsxFactory": "h",
+    "esModuleInterop": true,
+    "typeRoots": [
+      "@types",
+      "node_modules/@types"
+    ]
   }
 }

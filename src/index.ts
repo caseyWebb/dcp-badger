@@ -1,18 +1,7 @@
-import * as fs from 'fs-extra'
 import { IncomingMessage, ServerResponse } from 'http'
-import * as path from 'path'
 import axios from 'axios'
-import {
-  addWeeks,
-  getDate as getDayOfMonth,
-  getMonth,
-  setDay,
-  subMonths,
-  subWeeks,
-  format as formatDate
-} from 'date-fns'
-import { template as ejs } from 'lodash'
 import { filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
+import { createImage } from './svg'
 
 enum Extensions {
   any = '.+',
@@ -22,54 +11,7 @@ enum Extensions {
   typescript = 'ts'
 }
 
-type Template = (scope: any) => string
-
-function getDate(w: number, dw: number) {
-  const weeksAgo = 53 - w
-  let date = new Date()
-  date = subWeeks(date, weeksAgo)
-  date = setDay(date, dw)
-  return date
-}
-
-function getFill(completedDays: Set<string>, date: Date) {
-  const now = new Date()
-  if (date > now) {
-    return 'rgba(0,0,0,0)'
-  }
-  const isComplete = completedDays.has(formatDate(date, 'yyyy.MM.dd'))
-  return isComplete ? '#7bc96f' : '#ebedf0'
-}
-
-function getMonthLabel(m: number) {
-  const monthsAgo = 12 - m
-  const now = new Date()
-  const then = subMonths(now, monthsAgo)
-  return formatDate(then, 'MMM')
-}
-
-function getMonthX(m: number) {
-  const monthsAgo = 12 - m
-  const now = new Date()
-  const targetMonth = getMonth(subMonths(now, monthsAgo))
-  let then = setDay(subMonths(now, 12), 0)
-  let column = 0
-  while (getMonth(then) !== targetMonth || getDayOfMonth(then) > 7) {
-    column++
-    then = addWeeks(then, 1)
-  }
-  return 12 * column
-}
-
-async function createTemplate(): Promise<Template> {
-  const templateString = await fs.readFile(
-    path.resolve(__dirname, './image.ejs'),
-    'utf-8'
-  )
-  return ejs(templateString)
-}
-
-async function getCompletedDays() {
+export async function getCompletedDays() {
   const owner = 'caseyWebb'
   const repo = 'dcp'
   const ref = 'master'
@@ -96,18 +38,9 @@ async function getCompletedDays() {
 }
 
 export default async (req: IncomingMessage, res: ServerResponse) => {
-  const [template, completedDays] = await Promise.all([
-    createTemplate(),
-    getCompletedDays()
-  ])
+  const completedDays = await getCompletedDays()
 
   res.setHeader('Content-Type', 'image/svg+xml')
 
-  return template({
-    getDate,
-    getFill: (d: Date) => getFill(completedDays, d),
-    getMonthLabel,
-    getMonthX,
-    formatDate
-  })
+  return createImage(completedDays)
 }

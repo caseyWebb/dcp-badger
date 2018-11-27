@@ -1257,6 +1257,13 @@ jsonfile@^4.0.0:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
+jsx-dom@^6.2.1:
+  version "6.2.1"
+  resolved "https://registry.npmjs.org/jsx-dom/-/jsx-dom-6.2.1.tgz#776fb13c3b8163b4c9f9eedf7b283ee88da56246"
+  integrity sha512-Du+PYNZK4DxYnKhQhVThiODoLfS6Jue7DZRAmekngAqBPtjhj7CtQpHjtaRASNtYmMvPWgkrydrgFtbAdjzQog==
+  dependencies:
+    tslib "^1.9.3"
+
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"
   resolved "https://registry.npmjs.org/kind-of/-/kind-of-3.2.2.tgz#31ea21a734bab9bbb0f32466d893aea51e4a3c64"
@@ -2354,7 +2361,7 @@ ts-node@^7.0.1:
     source-map-support "^0.5.6"
     yn "^2.0.0"
 
-tslib@^1.9.0:
+tslib@^1.9.0, tslib@^1.9.3:
   version "1.9.3"
   resolved "https://registry.npmjs.org/tslib/-/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
   integrity sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ==
@@ -2466,6 +2473,11 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+vhtml@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/vhtml/-/vhtml-2.1.0.tgz#a858ed2e328c595399a61ae88a0e00fb756be01c"
+  integrity sha1-qFjtLjKMWVOZphroig4A+3Vr4Bw=
 
 which-module@^2.0.0:
   version "2.0.0"

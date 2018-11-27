@@ -1,47 +1,40 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import axios from 'axios'
-import Koa from 'koa'
-import { template as ejs } from 'lodash'
-import { filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
 import {
   addWeeks,
   getDate as getDayOfMonth,
   getMonth,
-  setDate as setDayOfMonth,
   setDay,
-  setMonth,
-  setYear,
   subMonths,
   subWeeks,
   format as formatDate
 } from 'date-fns'
+import Koa from 'koa'
+import { template as ejs } from 'lodash'
+import { filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
 
-const host = 'localhost'
-const port = 3000
+const config = {
+  port: process.env.PORT || 3000
+}
 
-const extensions = {
-  any: '.+',
-  haskell: 'hs',
-  typescript: 'ts'
+enum Extensions {
+  any = '.+',
+  go = 'go',
+  haskell = 'hs',
+  javascript = 'js',
+  typescript = 'ts'
 }
 
 type Template = (scope: any) => string
 
-/**
- * Main app entry point. Creates and starts the server.
- */
 async function main() {
   const app = new Koa()
   const template = await createTemplate()
 
   app.use(createRequestHandler(template))
 
-  const server = app.listen(port, host)
-
-  server.on('listening', () => console.log(`Server started on ${host}:${port}`))
-
-  process.once('SIGUSR2', () => server.close())
+  app.listen(config.port, () => console.log(`Server started on 0.0.0.0:${config.port}`))
 }
 
 function createRequestHandler(template: Template) {
@@ -104,18 +97,12 @@ async function createTemplate(): Promise<Template> {
   return ejs(templateString)
 }
 
-/**
- * Returns an array of normalized date strings.
- *
- * .indexOf/.includes in V8 is wicked fast, so this really isn't worth trying to do any
- * crazy optimizations (for now)
- */
 async function getCompletedDays() {
   const owner = 'caseyWebb'
   const repo = 'dcp'
   const ref = 'master'
   const language = 'any'
-  const ext = extensions[language]
+  const ext = Extensions[language]
   const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
   const res = await axios.get(url)
   const regex = new RegExp(

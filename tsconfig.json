@@ -6,7 +6,6 @@
     "outDir": "dist",
     "jsx": "react",
     "jsxFactory": "h",
-    "esModuleInterop": true,
     "typeRoots": [
       "@types",
       "node_modules/@types"

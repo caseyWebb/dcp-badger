@@ -11,7 +11,7 @@ import {
 } from 'date-fns'
 import { times } from 'lodash'
 import { filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
-import h from 'vhtml'
+import * as h from 'vhtml'
 
 enum Extensions {
   any = '.+',
@@ -21,7 +21,7 @@ enum Extensions {
   typescript = 'ts'
 }
 
-export default async (req: IncomingMessage, res: ServerResponse) => {
+module.exports = async (req: IncomingMessage, res: ServerResponse) => {
   const completedDays = await getCompletedDays()
 
   res.setHeader('Content-Type', 'image/svg+xml')

@@ -1,13 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(require("axios"));
+const axios_1 = require("axios");
 const date_fns_1 = require("date-fns");
 const lodash_1 = require("lodash");
 const fp_1 = require("lodash/fp");
-const vhtml_1 = __importDefault(require("vhtml"));
+const h = require("vhtml");
 var Extensions;
 (function (Extensions) {
     Extensions["any"] = ".+";
@@ -16,7 +13,7 @@ var Extensions;
     Extensions["javascript"] = "js";
     Extensions["typescript"] = "ts";
 })(Extensions || (Extensions = {}));
-exports.default = async (req, res) => {
+module.exports = async (req, res) => {
     const completedDays = await getCompletedDays();
     res.setHeader('Content-Type', 'image/svg+xml');
     return createImage(completedDays);
@@ -49,22 +46,22 @@ function createImage(completedDays) {
       font-size: 9px;
     }
   `;
-    return (vhtml_1.default("svg", { width: "669", height: "104", xmlns: "http://www.w3.org/2000/svg" },
-        vhtml_1.default("style", null, css),
-        vhtml_1.default("g", null,
-            vhtml_1.default("g", { transform: "translate(17, 20)" }, lodash_1.times(53, (i) => createGridColumn(completedDays, i + 1))),
-            vhtml_1.default("g", { transform: "translate(29, 10)" }, lodash_1.times(12, (i) => createMonthLabel(i + 1))),
-            vhtml_1.default("text", { class: "wday", dx: "2", dy: "40" }, "Mon"),
-            vhtml_1.default("text", { class: "wday", dx: "2", dy: "64" }, "Wed"),
-            vhtml_1.default("text", { class: "wday", dx: "2", dy: "89" }, "Fri"))));
+    return (h("svg", { width: "669", height: "104", xmlns: "http://www.w3.org/2000/svg" },
+        h("style", null, css),
+        h("g", null,
+            h("g", { transform: "translate(17, 20)" }, lodash_1.times(53, (i) => createGridColumn(completedDays, i + 1))),
+            h("g", { transform: "translate(29, 10)" }, lodash_1.times(12, (i) => createMonthLabel(i + 1))),
+            h("text", { class: "wday", dx: "2", dy: "40" }, "Mon"),
+            h("text", { class: "wday", dx: "2", dy: "64" }, "Wed"),
+            h("text", { class: "wday", dx: "2", dy: "89" }, "Fri"))));
 }
 function createMonthLabel(m) {
     const label = getMonthLabel(m);
     const x = getMonthX(m);
-    return (vhtml_1.default("text", { class: "month", x: x }, label));
+    return (h("text", { class: "month", x: x }, label));
 }
 function createGridColumn(completedDays, w) {
-    return vhtml_1.default("g", null, lodash_1.times(7, (d) => createGridBlock(completedDays, w, d)));
+    return h("g", null, lodash_1.times(7, (d) => createGridBlock(completedDays, w, d)));
 }
 function createGridBlock(completedDays, w, d) {
     const date = getDate(w, d);
@@ -72,8 +69,8 @@ function createGridBlock(completedDays, w, d) {
     const y = 12 * d;
     const fill = getFill(completedDays, date);
     const title = date_fns_1.format(date, 'EEEE MMMM do, yyyy');
-    return (vhtml_1.default("rect", { width: "10", height: "10", x: x, y: y, fill: fill },
-        vhtml_1.default("title", null, title)));
+    return (h("rect", { width: "10", height: "10", x: x, y: y, fill: fill },
+        h("title", null, title)));
 }
 function getDate(w, dw) {
     const weeksAgo = 53 - w;

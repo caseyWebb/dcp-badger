@@ -16,10 +16,13 @@
     <g>
         <!-- Grid -->
         <g transform="translate(17, 20)">
-            <% for (let w = 1; w <= 52; w++) { %>
+            <% for (let w = 1; w <= 53; w++) { %>
                 <g>
                     <% for (let d = 0; d < 7; d++) { %>
-                        <rect width="10" height="10" x="<%= 12 * w %>" y="<%= 12 * d %>" fill="<%= getFill(52 - w, d) %>"></rect>
+                        <% const date = getDate(w, d) %>
+                        <rect width="10" height="10" x="<%= 12 * w %>" y="<%= 12 * d %>" fill="<%= getFill(date) %>">
+                            <title><%= formatDate(date, 'EEEE MMMM do, yyyy') %></title>
+                        </rect>
                     <% } %>
                 </g>
             <% } %>

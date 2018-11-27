@@ -1,4 +1,5 @@
 import * as fs from 'fs-extra'
+import { IncomingMessage, ServerResponse } from 'http'
 import * as path from 'path'
 import axios from 'axios'
 import {
@@ -10,13 +11,8 @@ import {
   subWeeks,
   format as formatDate
 } from 'date-fns'
-import Koa from 'koa'
 import { template as ejs } from 'lodash'
 import { filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
-
-const config = {
-  port: process.env.PORT || 3000
-}
 
 enum Extensions {
   any = '.+',
@@ -27,30 +23,6 @@ enum Extensions {
 }
 
 type Template = (scope: any) => string
-
-async function main() {
-  const app = new Koa()
-  const template = await createTemplate()
-
-  app.use(createRequestHandler(template))
-
-  app.listen(config.port, () => console.log(`Server started on 0.0.0.0:${config.port}`))
-}
-
-function createRequestHandler(template: Template) {
-  return async function requestHandler(ctx: Koa.Context) {
-    const completedDays = await getCompletedDays()
-    ctx.body = template({
-      getDate,
-      getFill: (d: Date) => getFill(completedDays, d),
-      getMonthLabel,
-      getMonthX,
-      formatDate
-    })
-    ctx.status = 200
-    ctx.type = 'image/svg+xml'
-  }
-}
 
 function getDate(w: number, dw: number) {
   const weeksAgo = 53 - w
@@ -123,4 +95,19 @@ async function getCompletedDays() {
   )
 }
 
-main()
+export default async (req: IncomingMessage, res: ServerResponse) => {
+  const [template, completedDays] = await Promise.all([
+    createTemplate(),
+    getCompletedDays()
+  ])
+
+  res.setHeader('Content-Type', 'image/svg+xml')
+
+  return template({
+    getDate,
+    getFill: (d: Date) => getFill(completedDays, d),
+    getMonthLabel,
+    getMonthX,
+    formatDate
+  })
+}

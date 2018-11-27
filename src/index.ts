@@ -1,9 +1,10 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { template as ejs } from 'lodash'
-import { filter, flow, map, uniqBy } from 'lodash/fp'
 import axios from 'axios'
 import Koa from 'koa'
+import { template as ejs } from 'lodash'
+import { filter, flow, map, uniq } from 'lodash/fp'
+import { addWeeks, getDate, getMonth, setDay, subMonths, format } from 'date-fns'
 
 const host = 'localhost'
 const port = 3000
@@ -16,8 +17,13 @@ const extensions = {
 
 type Template = (data: TemplateData) => string
 
-type TemplateData = {}
+type TemplateData = {
 
+}
+
+/**
+ * Main app entry point. Creates and starts the server.
+ */
 async function main() {
   const app = new Koa()
   const template = await createTemplate()
@@ -33,12 +39,40 @@ async function main() {
 
 function createRequestHandler(template: Template) {
   return async function requestHandler(ctx: Koa.Context) {
-    const data = await getTemplateData()
-    console.log(data)
-    ctx.body = template(data)
+    const completedDays = await getCompletedDays()
+    console.log(completedDays)
+    ctx.body = template({
+      getFill,
+      getMonthLabel,
+      getMonthX
+    })
     ctx.status = 200
     ctx.type = 'image/svg+xml'
   }
+}
+
+function getFill(w: number, d: number) {
+  return '#ebedf0'
+}
+
+function getMonthLabel(m: number) {
+  const monthsAgo = 12 - m
+  const now = new Date()
+  const then = subMonths(now, monthsAgo)
+  return format(then, 'MMM')
+}
+
+function getMonthX(m: number) {
+  const monthsAgo = 12 - m
+  const now = new Date()
+  const targetMonth = getMonth(subMonths(now, monthsAgo))
+  let then = setDay(subMonths(now, 12), 0)
+  let column = 0
+  while (getMonth(then) !== targetMonth || getDate(then) > 7) {
+    column++
+    then = addWeeks(then, 1)
+  }
+  return 12 * column
 }
 
 async function createTemplate(): Promise<Template> {
@@ -49,7 +83,13 @@ async function createTemplate(): Promise<Template> {
   return ejs(templateString)
 }
 
-async function getTemplateData() {
+/**
+ * Returns an array of normalized date strings.
+ * 
+ * .indexOf/.includes in V8 is wicked fast, so this really isn't worth trying to do any
+ * crazy optimizations (for now)
+ */
+async function getCompletedDays() {
   const owner = 'caseyWebb'
   const repo = 'dcp'
   const ref = 'master'
@@ -61,14 +101,14 @@ async function getTemplateData() {
     `(?<year>\\d+)/(?<month>\\d+)/(?<day>\\d+)\\.${ext}`,
     'u'
   )
-  const files = flow(
+  return flow(
     filter(({ type }: any) => type === 'blob'),
     map(({ path }: any) => regex.exec(path)),
     filter((f: RegExpExecArray) => f !== null),
     map((f: RegExpExecArray) => f.groups),
-    uniqBy((f: any) => f.year + f.month + f.day)
+    map((f: any) => `${f.year}.${f.month}.${f.day}`),
+    uniq,
   )(res.data.tree)
-  return files
 }
 
 main()

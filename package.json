@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "optimize": "ncc build dist/index.js -o dist && minify dist/index.js -d dist",
     "develop": "concurrently -p command  \"micro-dev\" \"tsc --watch\"",
     "start": "micro"
   },
@@ -22,6 +23,8 @@
     "@types/fs-extra": "^5.0.4",
     "@types/lodash": "^4.14.118",
     "@types/node": "^10.12.10",
+    "@zeit/ncc": "^0.1.16",
+    "babel-minify": "^0.5.0",
     "concurrently": "^4.1.0",
     "micro-dev": "^3.0.0",
     "prettier": "^1.15.2",

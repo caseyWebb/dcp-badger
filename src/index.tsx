@@ -1,4 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http'
+import { parse as parseQueryString } from 'querystring'
+import { parse as parseUrl } from 'url'
 import axios from 'axios'
 import {
   addWeeks,
@@ -10,64 +12,104 @@ import {
   format as formatDate
 } from 'date-fns'
 import { times } from 'lodash'
-import { filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
+import { defaults, filter, flow, map, padCharsStart, uniq } from 'lodash/fp'
+import { send } from 'micro'
 import * as h from 'vhtml'
 
-enum Extensions {
-  any = '.+',
-  go = 'go',
-  haskell = 'hs',
-  javascript = 'js',
-  typescript = 'ts'
+type QueryParams = {
+  repo: string
+  ref: string
+  regex: string
+  ext: string
+  labelColor: string
+  completeColor: string
+  incompleteColor: string
+  futureColor: string
 }
 
 module.exports = async (req: IncomingMessage, res: ServerResponse) => {
-  const completedDays = await getCompletedDays()
-
-  res.setHeader('Content-Type', 'image/svg+xml')
-
-  return createImage(completedDays)
+  try {
+    const query = getQuery(req)
+    const completedDays = await getCompletedDays(query)
+    const image = createImage(query, completedDays)
+    res.setHeader('Content-Type', 'image/svg+xml')
+    return image
+  } catch (e) {
+    send(res, 500, e.message)
+  }
 }
 
-async function getCompletedDays() {
-  const owner = 'caseyWebb'
-  const repo = 'dcp'
-  const ref = 'master'
-  const language = 'any'
-  const ext = Extensions[language]
-  const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
+function getQuery(req: IncomingMessage) {
+  const unknownError = new Error('¯\\_(ツ)_/¯')
+  const missingRepoParamError = new Error('"repo" query parameter is required')
+  
+  if (!req.url) throw unknownError
+  
+  const qs = parseUrl(req.url).search
+  
+  if (!qs) throw missingRepoParamError
+  
+  const query = defaults({
+    repo: '',
+    ext: '.+',
+    ref: 'master',
+    regex: `(?<year>\\d{4})/(?<month>\\d+)/(?<day>\\d+)\\.<EXT>`,
+    labelColor: '#767676',
+    completeColor: '#7bc96f',
+    incompleteColor: '#ebedf0',
+    futureColor: 'rgba(0,0,0,0)' 
+  }, parseQueryString(qs.replace(/^\?/, '')))
+  
+  query.regex = query.regex.replace('<EXT>', query.ext)
+
+  if (!query.repo) throw missingRepoParamError
+
+  return query
+}
+
+async function getCompletedDays({
+  repo,
+  ref,
+  regex: regExString
+}: QueryParams) {
+  const regex = new RegExp(regExString, 'u')
+  const zeroPad = padCharsStart('0', 2)
+  const url = `https://api.github.com/repos/${repo}/git/trees/${ref}?recursive=1`
   const res = await axios.get(url)
-  const regex = new RegExp(
-    `(?<year>\\d{4})/(?<month>\\d+)/(?<day>\\d+)\\.${ext}`,
-    'u'
-  )
-  const zeroPad = padCharsStart('0')
-  const zeroPad2 = zeroPad(2)
   return new Set(
     flow(
       filter(({ type }: any) => type === 'blob'),
       map(({ path }: any) => regex.exec(path)),
       filter((f: RegExpExecArray) => f !== null),
       map((f: RegExpExecArray) => f.groups),
-      map((f: any) => `${f.year}.${zeroPad2(f.month)}.${zeroPad2(f.day)}`),
+      map((f: any) => `${f.year}.${zeroPad(f.month)}.${zeroPad(f.day)}`),
       uniq
     )(res.data.tree)
   )
 }
 
-function createImage(completedDays: Set<string>) {
+function createImage(query: QueryParams, completedDays: Set<string>) {
   const css = `
     * {
       font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
     }
     .month, .wday {
-      fill: #767676;
+      fill: ${query.labelColor};
     }
     .month {
       font-size: 10px;
     }
     .wday {
       font-size: 9px;
+    }
+    .complete {
+      fill: ${query.completeColor}
+    }
+    .incomplete {
+      fill: ${query.incompleteColor}
+    }
+    .future {
+      fill: ${query.futureColor}
     }
   `
   return (
@@ -114,10 +156,10 @@ function createGridBlock(completedDays: Set<string>, w: number, d: number) {
   const date = getDate(w, d)
   const x = 12 * w
   const y = 12 * d
-  const fill = getFill(completedDays, date)
   const title = formatDate(date, 'EEEE MMMM do, yyyy')
+  const clazz = getBlockClass(completedDays, date)
   return (
-    <rect width="10" height="10" x={x} y={y} fill={fill}>
+    <rect width="10" height="10" class={clazz} x={x} y={y}>
       <title>{title}</title>
     </rect>
   )
@@ -131,16 +173,15 @@ function getDate(w: number, dw: number) {
   return date
 }
 
-function getFill(completedDays: Set<string>, date: Date) {
+function getBlockClass(completedDays: Set<string>, date: Date) {
   const now = new Date()
   const completed = completedDays.has(formatDate(date, 'yyyy.MM.dd'))
-  const transparent = 'rgba(0,0,0,0)'
-  const green = '#7bc96f'
-  const gray = '#ebedf0'
-  switch (true) {
-    case date > now: return transparent
-    case completed: return green
-    default: return gray
+  if (date > now) {
+    return 'future'
+  } else if (completed) {
+    return 'complete'
+  } else {
+    return 'incomplete'
   }
 }
 

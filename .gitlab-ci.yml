@@ -1,0 +1,30 @@
+stages:
+    - build
+    - deploy
+
+variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
+build:
+    stage: build
+    retry: 2
+    script:
+        - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        - docker build -t $IMAGE_TAG .
+        - docker push $IMAGE_TAG
+    tags:
+        - linux
+        - worker
+        - shell
+
+deploy:
+    stage: deploy
+    environment:
+        name: production
+        url: https://apps.caseyWebb.xyz/dcp-badger
+    tags:
+        - eris
+        - shell
+    script: docker run --detach --name dcp-badger-prod --publish 9000:3000 --restart unless-stopped $IMAGE_TAG
+    only:
+        - master@caseyWebb/dcp-badger

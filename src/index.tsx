@@ -93,27 +93,27 @@ function createImage(query: QueryParams, completedDays: Set<string>) {
     * {
       font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
     }
-    .month, .wday {
+    .month, .wday, .attribution {
       fill: ${query.labelColor};
     }
-    .month {
+    .month, .attribution {
       font-size: 10px;
     }
     .wday {
       font-size: 9px;
     }
     .complete {
-      fill: ${query.completeColor}
+      fill: ${query.completeColor};
     }
     .incomplete {
-      fill: ${query.incompleteColor}
+      fill: ${query.incompleteColor};
     }
     .future {
-      fill: ${query.futureColor}
+      fill: ${query.futureColor};
     }
   `
   return (
-    <svg width="669" height="104" xmlns="http://www.w3.org/2000/svg">
+    <svg width="669" height="130" xmlns="http://www.w3.org/2000/svg">
       <style>{css}</style>
       <g>
         <g transform="translate(17, 20)">
@@ -134,6 +134,7 @@ function createImage(query: QueryParams, completedDays: Set<string>) {
           Fri
         </text>
       </g>
+      <text class="attribution" dx="30" dy="120">powered by dcp-badger, made with ❤ by caseyWebb</text>
     </svg>
   )
 }

@@ -13,7 +13,7 @@ Shamelessly copied from the GitHub profile activity grid.
 Include an image with the `src` attribute set to an instance of this app with a query param specifying the repo to check, similar to most README badges...
 
 ```markdown
-![][https://apps.caseywebb.xyz/dcp-badger?repo=caseyWebb/dcp]
+![](https://apps.caseywebb.xyz/dcp-badger?repo=caseyWebb/dcp)
 ```
 
 By default, files are expected to exist in the repo under `/<year>/<month>/<day>.ext`.
